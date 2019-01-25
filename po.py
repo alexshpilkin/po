@@ -1,10 +1,7 @@
-from collections     import namedtuple
+from collections     import OrderedDict, namedtuple
 from collections.abc import Mapping
 
-# FIXME Support obsolete (#~) and previous (#|) entries
-
-COMMENTS = ['#', '#.', '#:', '#,']
-KEYWORDS = ['domain', 'msgctxt', 'msgid', 'msgstr']
+# FIXME Support obsolete (#~) and previous (#|) entries, multiple plurals
 
 class ParseError(IOError):
 	pass
@@ -25,8 +22,6 @@ def tokens(lines):
 		if line[0] == '#':
 			if len(line) == 1 or line[1].isspace():
 				yield Token('#', line[1:])
-			elif line[0:2] not in COMMENTS:
-				raise ParseError("Unknown comment")
 			else:
 				yield Token(line[0:2], line[2:])
 			continue
@@ -46,8 +41,6 @@ def tokens(lines):
 				i = 0
 				while i < len(line) and line[i].isalpha():
 					i += 1
-				if line[:i] not in KEYWORDS:
-					raise ParseError("Unknown keyword")
 				yield Token('keyword', line[:i])
 				line = line[i:]
 			else:
@@ -109,25 +102,25 @@ class Reader:
 		return entry
 
 class Writer:
+	__slots__ = ['file', '_end']
+
 	def __init__(self, file):
 		self.file = file
+		self._end = ''
 
 	def write(self, entry):
-		entry = dict(entry)
+		print(end=self._end, file=self.file)
 
-		for key in COMMENTS:
-			lines = entry.pop(key, ())
-			for line in lines:
-				assert not line or line[0].isspace()
-				print(key + line, file=self.file)
+		for key in OrderedDict(entry):
+			lines = entry[key]
+			if key.startswith('#'):
+				for line in lines:
+					assert not line or line[0].isspace()
+					print(key+line, file=self.file)
+			else:
+				if not lines: continue
+				print(key, end=' ', file=self.file)
+				for line in lines:
+					print('"'+line+'"', file=self.file)
 
-		for key in KEYWORDS:
-			lines = entry.pop(key, ())
-			if not lines: continue
-			print(key, end=' ', file=self.file)
-			for line in lines:
-				print('"{}"'.format(line), file=self.file)
-
-		if entry:
-			raise ValueError('Unrecognized keys in entry')
-		print(file=self.file)
+		self._end = '\n'
