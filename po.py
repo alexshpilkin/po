@@ -118,11 +118,11 @@ class Writer:
 			if key.startswith('#'):
 				for line in lines:
 					assert not line or line[0].isspace()
-					print(key+line, file=self.file)
+					print(key + line, file=self.file)
 			else:
 				if not lines: continue
 				print(key, end=' ', file=self.file)
 				for line in lines:
-					print('"'+line+'"', file=self.file)
+					print('"' + line + '"', file=self.file)
 
 		self._end = '\n'
