@@ -15,7 +15,10 @@ setuptools.setup(
 	long_description_content_type='text/x-rst',
 	url='https://github.com/alexshpilkin/po',
 	py_modules=['po'],
+	python_requires='~=3.0',
 	install_requires=[],
+	setup_requires=['pytest-runner'],
+	tests_require=['pytest', 'pytest-cov'],
 	classifiers=[
 		'Development Status :: 3 - Alpha',
 		'Intended Audience :: Developers',

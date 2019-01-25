@@ -6,10 +6,12 @@ from collections.abc import Mapping
 class ParseError(IOError):
 	pass
 
-Token = namedtuple('_Token', ['type', 'value'])
-NIL = Token('nil', None)
+Token = namedtuple('Token', ['type', 'value'])
+
 END = Token('end', None)
-def tokens(lines):
+NIL = Token('nil', None)
+
+def tokenize(lines):
 	for line in lines:
 		line = line.lstrip().rstrip('\n')
 
@@ -26,7 +28,7 @@ def tokens(lines):
 				yield Token(line[0:2], line[2:])
 			continue
 
-		# Keywords
+		# Keywords and strings
 		while line:
 			if line[0] == '"':
 				i = 1
@@ -53,7 +55,7 @@ class Reader:
 	def __init__(self, entry, file):
 		self.Entry   = entry
 		self.file    = file
-		self._tokens = tokens(file)
+		self._tokens = tokenize(file)
 
 		self._peek = None; self._next() # prime the pump
 		self._header = None # FIXME
@@ -95,7 +97,7 @@ class Reader:
 
 		# Empty
 		if self._peek.type not in ['nil', 'end']:
-			raise ParseError('Expected end of entry')
+			raise ParseError("Expected end of entry")
 		while self._peek.type == 'nil':
 			self._next()
 
